@@ -1,1 +1,7 @@
 language: java
+cache:
+  directories:
+    - "${HOME}/.m2/repository"
+before_script:
+  - echo ".m2 directory: ${HOME}/.m2"
+  - mkdir -p ${HOME}/.m2/repository

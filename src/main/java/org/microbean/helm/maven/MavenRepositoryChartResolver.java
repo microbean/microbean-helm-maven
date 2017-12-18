@@ -266,6 +266,11 @@ public class MavenRepositoryChartResolver extends AbstractChartResolver {
       classifier = null;
     }
 
+    System.out.println("*** groupId: " + groupId);
+    System.out.println("*** artifactId: " + artifactId);
+    System.out.println("*** packaging: " + packaging);
+    System.out.println("*** classifier: " + classifier);
+
     final Artifact chart = new DefaultArtifact(groupId, artifactId, classifier, packaging, chartVersion);
     return this.resolve(chart);
   }
