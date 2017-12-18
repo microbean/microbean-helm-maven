@@ -3,5 +3,5 @@ cache:
   directories:
     - "${HOME}/.m2/repository"
 before_script:
-  - echo "\".m2 directory: ${HOME}/.m2\""
+  - echo "Before script"
   - mkdir -p ${HOME}/.m2/repository
