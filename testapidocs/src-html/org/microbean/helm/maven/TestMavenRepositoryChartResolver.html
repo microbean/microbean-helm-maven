@@ -1,0 +1,338 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/* -*- mode: Java; c-basic-offset: 2; indent-tabs-mode: nil; coding: utf-8-unix -*-<a name="line.1"></a>
+<span class="sourceLineNo">002</span> *<a name="line.2"></a>
+<span class="sourceLineNo">003</span> * Copyright © 2017 MicroBean.<a name="line.3"></a>
+<span class="sourceLineNo">004</span> *<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * Licensed under the Apache License, Version 2.0 (the "License");<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * you may not use this file except in compliance with the License.<a name="line.6"></a>
+<span class="sourceLineNo">007</span> * You may obtain a copy of the License at<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *     http://www.apache.org/licenses/LICENSE-2.0<a name="line.9"></a>
+<span class="sourceLineNo">010</span> *<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * Unless required by applicable law or agreed to in writing, software<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * implied.  See the License for the specific language governing<a name="line.14"></a>
+<span class="sourceLineNo">015</span> * permissions and limitations under the License.<a name="line.15"></a>
+<span class="sourceLineNo">016</span> */<a name="line.16"></a>
+<span class="sourceLineNo">017</span>package org.microbean.helm.maven;<a name="line.17"></a>
+<span class="sourceLineNo">018</span><a name="line.18"></a>
+<span class="sourceLineNo">019</span>import java.io.File;<a name="line.19"></a>
+<span class="sourceLineNo">020</span><a name="line.20"></a>
+<span class="sourceLineNo">021</span>import java.util.ArrayList;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import java.util.Collection;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import java.util.List;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import java.util.Map;<a name="line.24"></a>
+<span class="sourceLineNo">025</span><a name="line.25"></a>
+<span class="sourceLineNo">026</span>import hapi.chart.ChartOuterClass.Chart;<a name="line.26"></a>
+<span class="sourceLineNo">027</span><a name="line.27"></a>
+<span class="sourceLineNo">028</span>import org.apache.maven.settings.Mirror;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>import org.apache.maven.settings.Profile;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>import org.apache.maven.settings.Repository;<a name="line.30"></a>
+<span class="sourceLineNo">031</span>import org.apache.maven.settings.Settings;<a name="line.31"></a>
+<span class="sourceLineNo">032</span><a name="line.32"></a>
+<span class="sourceLineNo">033</span>import org.apache.maven.repository.internal.MavenRepositorySystemUtils;<a name="line.33"></a>
+<span class="sourceLineNo">034</span><a name="line.34"></a>
+<span class="sourceLineNo">035</span>import org.apache.maven.settings.building.DefaultSettingsBuilderFactory;<a name="line.35"></a>
+<span class="sourceLineNo">036</span>import org.apache.maven.settings.building.DefaultSettingsBuildingRequest;<a name="line.36"></a>
+<span class="sourceLineNo">037</span>import org.apache.maven.settings.building.SettingsBuildingResult;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>import org.apache.maven.settings.building.SettingsBuilder;<a name="line.38"></a>
+<span class="sourceLineNo">039</span>import org.apache.maven.settings.building.SettingsBuildingException;<a name="line.39"></a>
+<span class="sourceLineNo">040</span>import org.apache.maven.settings.building.SettingsProblem;<a name="line.40"></a>
+<span class="sourceLineNo">041</span><a name="line.41"></a>
+<span class="sourceLineNo">042</span>import org.eclipse.aether.DefaultRepositoryCache;<a name="line.42"></a>
+<span class="sourceLineNo">043</span>import org.eclipse.aether.DefaultRepositorySystemSession;<a name="line.43"></a>
+<span class="sourceLineNo">044</span>import org.eclipse.aether.RepositorySystem;<a name="line.44"></a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span>import org.eclipse.aether.connector.basic.BasicRepositoryConnectorFactory;<a name="line.46"></a>
+<span class="sourceLineNo">047</span><a name="line.47"></a>
+<span class="sourceLineNo">048</span>import org.eclipse.aether.impl.DefaultServiceLocator;<a name="line.48"></a>
+<span class="sourceLineNo">049</span>import org.eclipse.aether.impl.DefaultServiceLocator.ErrorHandler;<a name="line.49"></a>
+<span class="sourceLineNo">050</span><a name="line.50"></a>
+<span class="sourceLineNo">051</span>import org.eclipse.aether.repository.LocalRepository;<a name="line.51"></a>
+<span class="sourceLineNo">052</span>import org.eclipse.aether.repository.LocalRepositoryManager;<a name="line.52"></a>
+<span class="sourceLineNo">053</span>import org.eclipse.aether.repository.RemoteRepository;<a name="line.53"></a>
+<span class="sourceLineNo">054</span>import org.eclipse.aether.repository.RemoteRepository.Builder;<a name="line.54"></a>
+<span class="sourceLineNo">055</span><a name="line.55"></a>
+<span class="sourceLineNo">056</span>import org.eclipse.aether.spi.connector.RepositoryConnectorFactory;<a name="line.56"></a>
+<span class="sourceLineNo">057</span><a name="line.57"></a>
+<span class="sourceLineNo">058</span>import org.eclipse.aether.spi.connector.transport.TransporterFactory;<a name="line.58"></a>
+<span class="sourceLineNo">059</span><a name="line.59"></a>
+<span class="sourceLineNo">060</span>import org.eclipse.aether.transfer.AbstractTransferListener;<a name="line.60"></a>
+<span class="sourceLineNo">061</span>import org.eclipse.aether.transfer.TransferEvent;<a name="line.61"></a>
+<span class="sourceLineNo">062</span><a name="line.62"></a>
+<span class="sourceLineNo">063</span>import org.eclipse.aether.transport.file.FileTransporterFactory;<a name="line.63"></a>
+<span class="sourceLineNo">064</span><a name="line.64"></a>
+<span class="sourceLineNo">065</span>import org.eclipse.aether.transport.http.HttpTransporterFactory;<a name="line.65"></a>
+<span class="sourceLineNo">066</span><a name="line.66"></a>
+<span class="sourceLineNo">067</span>import org.eclipse.aether.util.repository.DefaultMirrorSelector;<a name="line.67"></a>
+<span class="sourceLineNo">068</span><a name="line.68"></a>
+<span class="sourceLineNo">069</span>import org.microbean.helm.chart.resolver.ChartResolverException;<a name="line.69"></a>
+<span class="sourceLineNo">070</span><a name="line.70"></a>
+<span class="sourceLineNo">071</span>import org.junit.Before;<a name="line.71"></a>
+<span class="sourceLineNo">072</span>import org.junit.BeforeClass;<a name="line.72"></a>
+<span class="sourceLineNo">073</span>import org.junit.Test;<a name="line.73"></a>
+<span class="sourceLineNo">074</span><a name="line.74"></a>
+<span class="sourceLineNo">075</span>import static org.junit.Assert.assertNotNull;<a name="line.75"></a>
+<span class="sourceLineNo">076</span><a name="line.76"></a>
+<span class="sourceLineNo">077</span>public class TestMavenRepositoryChartResolver {<a name="line.77"></a>
+<span class="sourceLineNo">078</span><a name="line.78"></a>
+<span class="sourceLineNo">079</span>  private static Settings settings;<a name="line.79"></a>
+<span class="sourceLineNo">080</span>  <a name="line.80"></a>
+<span class="sourceLineNo">081</span>  private static RepositorySystem repositorySystem;<a name="line.81"></a>
+<span class="sourceLineNo">082</span><a name="line.82"></a>
+<span class="sourceLineNo">083</span>  private MavenRepositoryChartResolver resolver;<a name="line.83"></a>
+<span class="sourceLineNo">084</span>  <a name="line.84"></a>
+<span class="sourceLineNo">085</span>  public TestMavenRepositoryChartResolver() {<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    super();<a name="line.86"></a>
+<span class="sourceLineNo">087</span>  }<a name="line.87"></a>
+<span class="sourceLineNo">088</span><a name="line.88"></a>
+<span class="sourceLineNo">089</span>  @BeforeClass<a name="line.89"></a>
+<span class="sourceLineNo">090</span>  public static void setupClass() throws SettingsBuildingException {<a name="line.90"></a>
+<span class="sourceLineNo">091</span><a name="line.91"></a>
+<span class="sourceLineNo">092</span>    // See<a name="line.92"></a>
+<span class="sourceLineNo">093</span>    // https://github.com/eclipse/aether-demo/blob/master/aether-demo-snippets/src/main/java/org/eclipse/aether/examples/util/Booter.java<a name="line.93"></a>
+<span class="sourceLineNo">094</span>    // et al. for general (undocumented) recipe.<a name="line.94"></a>
+<span class="sourceLineNo">095</span>    <a name="line.95"></a>
+<span class="sourceLineNo">096</span>    final DefaultServiceLocator serviceLocator = MavenRepositorySystemUtils.newServiceLocator();<a name="line.96"></a>
+<span class="sourceLineNo">097</span>    assertNotNull(serviceLocator);<a name="line.97"></a>
+<span class="sourceLineNo">098</span>    serviceLocator.addService(RepositoryConnectorFactory.class, BasicRepositoryConnectorFactory.class);<a name="line.98"></a>
+<span class="sourceLineNo">099</span>    serviceLocator.addService(TransporterFactory.class, FileTransporterFactory.class);<a name="line.99"></a>
+<span class="sourceLineNo">100</span>    serviceLocator.addService(TransporterFactory.class, HttpTransporterFactory.class);<a name="line.100"></a>
+<span class="sourceLineNo">101</span>    serviceLocator.setErrorHandler(new ErrorHandler() {<a name="line.101"></a>
+<span class="sourceLineNo">102</span>        @Override<a name="line.102"></a>
+<span class="sourceLineNo">103</span>        public final void serviceCreationFailed(final Class&lt;?&gt; type, final Class&lt;?&gt; impl, final Throwable exception) {<a name="line.103"></a>
+<span class="sourceLineNo">104</span>          if (exception != null) {<a name="line.104"></a>
+<span class="sourceLineNo">105</span>            exception.printStackTrace();<a name="line.105"></a>
+<span class="sourceLineNo">106</span>          }<a name="line.106"></a>
+<span class="sourceLineNo">107</span>        }<a name="line.107"></a>
+<span class="sourceLineNo">108</span>      });<a name="line.108"></a>
+<span class="sourceLineNo">109</span><a name="line.109"></a>
+<span class="sourceLineNo">110</span>    final RepositorySystem repositorySystem = serviceLocator.getService(RepositorySystem.class);<a name="line.110"></a>
+<span class="sourceLineNo">111</span>    assertNotNull(repositorySystem);<a name="line.111"></a>
+<span class="sourceLineNo">112</span>    TestMavenRepositoryChartResolver.repositorySystem = repositorySystem;<a name="line.112"></a>
+<span class="sourceLineNo">113</span><a name="line.113"></a>
+<span class="sourceLineNo">114</span>    final Settings settings = getSettings();<a name="line.114"></a>
+<span class="sourceLineNo">115</span>    assertNotNull(settings);<a name="line.115"></a>
+<span class="sourceLineNo">116</span>    TestMavenRepositoryChartResolver.settings = settings;<a name="line.116"></a>
+<span class="sourceLineNo">117</span><a name="line.117"></a>
+<span class="sourceLineNo">118</span>  }<a name="line.118"></a>
+<span class="sourceLineNo">119</span><a name="line.119"></a>
+<span class="sourceLineNo">120</span>  @Before<a name="line.120"></a>
+<span class="sourceLineNo">121</span>  public void setup() {<a name="line.121"></a>
+<span class="sourceLineNo">122</span>    assertNotNull(settings);<a name="line.122"></a>
+<span class="sourceLineNo">123</span>    <a name="line.123"></a>
+<span class="sourceLineNo">124</span>    final DefaultRepositorySystemSession repositorySystemSession = MavenRepositorySystemUtils.newSession();<a name="line.124"></a>
+<span class="sourceLineNo">125</span>    assertNotNull(repositorySystemSession);<a name="line.125"></a>
+<span class="sourceLineNo">126</span>    // repositorySystemSession.setUpdatePolicy("always");<a name="line.126"></a>
+<span class="sourceLineNo">127</span>    repositorySystemSession.setTransferListener(new TransferListener());<a name="line.127"></a>
+<span class="sourceLineNo">128</span>    repositorySystemSession.setOffline(settings.isOffline());<a name="line.128"></a>
+<span class="sourceLineNo">129</span>    repositorySystemSession.setCache(new DefaultRepositoryCache());<a name="line.129"></a>
+<span class="sourceLineNo">130</span><a name="line.130"></a>
+<span class="sourceLineNo">131</span>    final Collection&lt;? extends Mirror&gt; mirrors = settings.getMirrors();<a name="line.131"></a>
+<span class="sourceLineNo">132</span>    if (mirrors != null &amp;&amp; !mirrors.isEmpty()) {<a name="line.132"></a>
+<span class="sourceLineNo">133</span>      final DefaultMirrorSelector mirrorSelector = new DefaultMirrorSelector();<a name="line.133"></a>
+<span class="sourceLineNo">134</span>      for (final Mirror mirror : mirrors) {<a name="line.134"></a>
+<span class="sourceLineNo">135</span>        assert mirror != null;<a name="line.135"></a>
+<span class="sourceLineNo">136</span>        mirrorSelector.add(mirror.getId(),<a name="line.136"></a>
+<span class="sourceLineNo">137</span>                           mirror.getUrl(),<a name="line.137"></a>
+<span class="sourceLineNo">138</span>                           mirror.getLayout(),<a name="line.138"></a>
+<span class="sourceLineNo">139</span>                           false, /* not a repository manager; settings.xml does not encode this information */<a name="line.139"></a>
+<span class="sourceLineNo">140</span>                           mirror.getMirrorOf(),<a name="line.140"></a>
+<span class="sourceLineNo">141</span>                           mirror.getMirrorOfLayouts());<a name="line.141"></a>
+<span class="sourceLineNo">142</span>      }<a name="line.142"></a>
+<span class="sourceLineNo">143</span>      repositorySystemSession.setMirrorSelector(mirrorSelector);<a name="line.143"></a>
+<span class="sourceLineNo">144</span>    }<a name="line.144"></a>
+<span class="sourceLineNo">145</span><a name="line.145"></a>
+<span class="sourceLineNo">146</span>    String localRepositoryString = settings.getLocalRepository();<a name="line.146"></a>
+<span class="sourceLineNo">147</span>    if (localRepositoryString == null) {<a name="line.147"></a>
+<span class="sourceLineNo">148</span>      localRepositoryString = System.getProperty("user.home") + "/.m2/repository";<a name="line.148"></a>
+<span class="sourceLineNo">149</span>    }<a name="line.149"></a>
+<span class="sourceLineNo">150</span>    <a name="line.150"></a>
+<span class="sourceLineNo">151</span>    final LocalRepository localRepository = new LocalRepository(localRepositoryString);<a name="line.151"></a>
+<span class="sourceLineNo">152</span>    final LocalRepositoryManager localRepositoryManager = repositorySystem.newLocalRepositoryManager(repositorySystemSession, localRepository);<a name="line.152"></a>
+<span class="sourceLineNo">153</span>    assertNotNull(localRepositoryManager);    <a name="line.153"></a>
+<span class="sourceLineNo">154</span>    repositorySystemSession.setLocalRepositoryManager(localRepositoryManager);<a name="line.154"></a>
+<span class="sourceLineNo">155</span><a name="line.155"></a>
+<span class="sourceLineNo">156</span>     List&lt;RemoteRepository&gt; remoteRepositories = new ArrayList&lt;&gt;();<a name="line.156"></a>
+<span class="sourceLineNo">157</span>    final Map&lt;String, Profile&gt; profiles = settings.getProfilesAsMap();<a name="line.157"></a>
+<span class="sourceLineNo">158</span>    if (profiles != null &amp;&amp; !profiles.isEmpty()) {<a name="line.158"></a>
+<span class="sourceLineNo">159</span>      final Collection&lt;String&gt; activeProfileKeys = settings.getActiveProfiles();<a name="line.159"></a>
+<span class="sourceLineNo">160</span>      if (activeProfileKeys != null &amp;&amp; !activeProfileKeys.isEmpty()) {<a name="line.160"></a>
+<span class="sourceLineNo">161</span>        for (final String activeProfileKey : activeProfileKeys) {<a name="line.161"></a>
+<span class="sourceLineNo">162</span>          final Profile activeProfile = profiles.get(activeProfileKey);<a name="line.162"></a>
+<span class="sourceLineNo">163</span>          if (activeProfile != null) {<a name="line.163"></a>
+<span class="sourceLineNo">164</span>            final Collection&lt;Repository&gt; repositories = activeProfile.getRepositories();<a name="line.164"></a>
+<span class="sourceLineNo">165</span>            if (repositories != null &amp;&amp; !repositories.isEmpty()) {<a name="line.165"></a>
+<span class="sourceLineNo">166</span>              for (final Repository repository : repositories) {<a name="line.166"></a>
+<span class="sourceLineNo">167</span>                if (repository != null) {<a name="line.167"></a>
+<span class="sourceLineNo">168</span>                  Builder builder = new Builder(repository.getId(), repository.getLayout(), repository.getUrl());<a name="line.168"></a>
+<span class="sourceLineNo">169</span><a name="line.169"></a>
+<span class="sourceLineNo">170</span>                  final org.apache.maven.settings.RepositoryPolicy settingsReleasePolicy = repository.getReleases();<a name="line.170"></a>
+<span class="sourceLineNo">171</span>                  if (settingsReleasePolicy != null) {<a name="line.171"></a>
+<span class="sourceLineNo">172</span>                    final org.eclipse.aether.repository.RepositoryPolicy releasePolicy = new org.eclipse.aether.repository.RepositoryPolicy(settingsReleasePolicy.isEnabled(), settingsReleasePolicy.getUpdatePolicy(), settingsReleasePolicy.getChecksumPolicy());<a name="line.172"></a>
+<span class="sourceLineNo">173</span>                    builder = builder.setReleasePolicy(releasePolicy);<a name="line.173"></a>
+<span class="sourceLineNo">174</span>                  }<a name="line.174"></a>
+<span class="sourceLineNo">175</span><a name="line.175"></a>
+<span class="sourceLineNo">176</span>                  final org.apache.maven.settings.RepositoryPolicy settingsSnapshotPolicy = repository.getSnapshots();<a name="line.176"></a>
+<span class="sourceLineNo">177</span>                  if (settingsSnapshotPolicy != null) {<a name="line.177"></a>
+<span class="sourceLineNo">178</span>                    final org.eclipse.aether.repository.RepositoryPolicy snapshotPolicy = new org.eclipse.aether.repository.RepositoryPolicy(settingsSnapshotPolicy.isEnabled(), settingsSnapshotPolicy.getUpdatePolicy(), settingsSnapshotPolicy.getChecksumPolicy());<a name="line.178"></a>
+<span class="sourceLineNo">179</span>                    builder = builder.setSnapshotPolicy(snapshotPolicy);<a name="line.179"></a>
+<span class="sourceLineNo">180</span>                  }<a name="line.180"></a>
+<span class="sourceLineNo">181</span>                  <a name="line.181"></a>
+<span class="sourceLineNo">182</span>                  final RemoteRepository remoteRepository = builder.build();<a name="line.182"></a>
+<span class="sourceLineNo">183</span>                  assert remoteRepository != null;<a name="line.183"></a>
+<span class="sourceLineNo">184</span>                  remoteRepositories.add(remoteRepository);<a name="line.184"></a>
+<span class="sourceLineNo">185</span>                }<a name="line.185"></a>
+<span class="sourceLineNo">186</span>              }<a name="line.186"></a>
+<span class="sourceLineNo">187</span>            }<a name="line.187"></a>
+<span class="sourceLineNo">188</span>          }<a name="line.188"></a>
+<span class="sourceLineNo">189</span>        }<a name="line.189"></a>
+<span class="sourceLineNo">190</span>      }<a name="line.190"></a>
+<span class="sourceLineNo">191</span>    }<a name="line.191"></a>
+<span class="sourceLineNo">192</span>    final RemoteRepository mavenCentral = new Builder("central", "default", "http://central.maven.org/maven2/").build();<a name="line.192"></a>
+<span class="sourceLineNo">193</span>    assert mavenCentral != null;<a name="line.193"></a>
+<span class="sourceLineNo">194</span>    remoteRepositories.add(mavenCentral);<a name="line.194"></a>
+<span class="sourceLineNo">195</span>    remoteRepositories = repositorySystem.newResolutionRepositories(repositorySystemSession, remoteRepositories);<a name="line.195"></a>
+<span class="sourceLineNo">196</span>    assertNotNull(remoteRepositories);<a name="line.196"></a>
+<span class="sourceLineNo">197</span><a name="line.197"></a>
+<span class="sourceLineNo">198</span>    this.resolver = new MavenRepositoryChartResolver(repositorySystem, repositorySystemSession, remoteRepositories);<a name="line.198"></a>
+<span class="sourceLineNo">199</span>  }<a name="line.199"></a>
+<span class="sourceLineNo">200</span><a name="line.200"></a>
+<span class="sourceLineNo">201</span>  @Test<a name="line.201"></a>
+<span class="sourceLineNo">202</span>  public void testArbitraryHelmChartResolution() throws ChartResolverException {<a name="line.202"></a>
+<span class="sourceLineNo">203</span>    assertNotNull(this.resolver);<a name="line.203"></a>
+<span class="sourceLineNo">204</span><a name="line.204"></a>
+<span class="sourceLineNo">205</span>    final Chart.Builder chart = this.resolver.resolve("io.fabric8.platform.packages:ingress:tar.gz:helm", "4.0.208");<a name="line.205"></a>
+<span class="sourceLineNo">206</span>    assertNotNull(chart);<a name="line.206"></a>
+<span class="sourceLineNo">207</span>  }<a name="line.207"></a>
+<span class="sourceLineNo">208</span>  <a name="line.208"></a>
+<span class="sourceLineNo">209</span><a name="line.209"></a>
+<span class="sourceLineNo">210</span>  private static final Settings getSettings() throws SettingsBuildingException {<a name="line.210"></a>
+<span class="sourceLineNo">211</span>    final SettingsBuilder settingsBuilder = new DefaultSettingsBuilderFactory().newInstance(); // this method should be static!<a name="line.211"></a>
+<span class="sourceLineNo">212</span>    assert settingsBuilder != null;<a name="line.212"></a>
+<span class="sourceLineNo">213</span>    final DefaultSettingsBuildingRequest settingsBuildingRequest = new DefaultSettingsBuildingRequest();<a name="line.213"></a>
+<span class="sourceLineNo">214</span>    settingsBuildingRequest.setSystemProperties(System.getProperties());<a name="line.214"></a>
+<span class="sourceLineNo">215</span>    // settingsBuildingRequest.setUserProperties(userProperties); // TODO: implement this<a name="line.215"></a>
+<span class="sourceLineNo">216</span>    settingsBuildingRequest.setGlobalSettingsFile(new File("/usr/local/maven/conf/settings.xml")); // TODO: do this for real<a name="line.216"></a>
+<span class="sourceLineNo">217</span>    settingsBuildingRequest.setUserSettingsFile(new File(new File(System.getProperty("user.home")), ".m2/settings.xml"));<a name="line.217"></a>
+<span class="sourceLineNo">218</span>    final SettingsBuildingResult settingsBuildingResult = settingsBuilder.build(settingsBuildingRequest);<a name="line.218"></a>
+<span class="sourceLineNo">219</span>    assert settingsBuildingResult != null;<a name="line.219"></a>
+<span class="sourceLineNo">220</span>    final List&lt;SettingsProblem&gt; settingsBuildingProblems = settingsBuildingResult.getProblems();<a name="line.220"></a>
+<span class="sourceLineNo">221</span>    if (settingsBuildingProblems != null &amp;&amp; !settingsBuildingProblems.isEmpty()) {<a name="line.221"></a>
+<span class="sourceLineNo">222</span>      throw new SettingsBuildingException(settingsBuildingProblems);<a name="line.222"></a>
+<span class="sourceLineNo">223</span>    }<a name="line.223"></a>
+<span class="sourceLineNo">224</span>    return settingsBuildingResult.getEffectiveSettings();<a name="line.224"></a>
+<span class="sourceLineNo">225</span>  }<a name="line.225"></a>
+<span class="sourceLineNo">226</span>  <a name="line.226"></a>
+<span class="sourceLineNo">227</span>  private static final class TransferListener extends AbstractTransferListener {<a name="line.227"></a>
+<span class="sourceLineNo">228</span><a name="line.228"></a>
+<span class="sourceLineNo">229</span>    private TransferListener() {<a name="line.229"></a>
+<span class="sourceLineNo">230</span>      super();<a name="line.230"></a>
+<span class="sourceLineNo">231</span>    }<a name="line.231"></a>
+<span class="sourceLineNo">232</span><a name="line.232"></a>
+<span class="sourceLineNo">233</span>    @Override<a name="line.233"></a>
+<span class="sourceLineNo">234</span>    public void transferInitiated(final TransferEvent event) {<a name="line.234"></a>
+<span class="sourceLineNo">235</span>      System.out.println("*** transfer initiated: " + event);<a name="line.235"></a>
+<span class="sourceLineNo">236</span>    }<a name="line.236"></a>
+<span class="sourceLineNo">237</span><a name="line.237"></a>
+<span class="sourceLineNo">238</span>    @Override<a name="line.238"></a>
+<span class="sourceLineNo">239</span>    public void transferStarted(final TransferEvent event) {<a name="line.239"></a>
+<span class="sourceLineNo">240</span>      System.out.println("*** transfer started: " + event);<a name="line.240"></a>
+<span class="sourceLineNo">241</span>    }<a name="line.241"></a>
+<span class="sourceLineNo">242</span><a name="line.242"></a>
+<span class="sourceLineNo">243</span>    @Override<a name="line.243"></a>
+<span class="sourceLineNo">244</span>    public void transferProgressed(final TransferEvent event) {<a name="line.244"></a>
+<span class="sourceLineNo">245</span>      System.out.println("*** transfer progressed: " + event);<a name="line.245"></a>
+<span class="sourceLineNo">246</span>    }<a name="line.246"></a>
+<span class="sourceLineNo">247</span><a name="line.247"></a>
+<span class="sourceLineNo">248</span>    @Override<a name="line.248"></a>
+<span class="sourceLineNo">249</span>    public void transferSucceeded(final TransferEvent event) {<a name="line.249"></a>
+<span class="sourceLineNo">250</span>      System.out.println("*** transfer succeeded: " + event);<a name="line.250"></a>
+<span class="sourceLineNo">251</span>    }<a name="line.251"></a>
+<span class="sourceLineNo">252</span><a name="line.252"></a>
+<span class="sourceLineNo">253</span>    @Override<a name="line.253"></a>
+<span class="sourceLineNo">254</span>    public void transferCorrupted(final TransferEvent event) {<a name="line.254"></a>
+<span class="sourceLineNo">255</span>      System.out.println("*** transfer corrupted: " + event);<a name="line.255"></a>
+<span class="sourceLineNo">256</span>    }<a name="line.256"></a>
+<span class="sourceLineNo">257</span><a name="line.257"></a>
+<span class="sourceLineNo">258</span>    @Override<a name="line.258"></a>
+<span class="sourceLineNo">259</span>    public void transferFailed(final TransferEvent event) {<a name="line.259"></a>
+<span class="sourceLineNo">260</span>      System.out.println("*** transfer failed: " + event);<a name="line.260"></a>
+<span class="sourceLineNo">261</span>    }<a name="line.261"></a>
+<span class="sourceLineNo">262</span>    <a name="line.262"></a>
+<span class="sourceLineNo">263</span>  }<a name="line.263"></a>
+<span class="sourceLineNo">264</span>  <a name="line.264"></a>
+<span class="sourceLineNo">265</span>}<a name="line.265"></a>
+<span class="sourceLineNo">266</span><a name="line.266"></a>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+</pre>
+</div>
+</body>
+</html>
